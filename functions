@@ -1,0 +1,15 @@
+#!/bin/bash
+
+declare -A controller
+
+controller[date]() {
+    date +"%F %T";
+    echo "<br/><a href='/'>Home page</a>"
+}
+
+controller[]() {
+    echo "Path not found, 404 to be added. You might want to go to";
+    echo "<br/><a href='/date'>Date function!</a>";
+}
+
+. ./websrv/server

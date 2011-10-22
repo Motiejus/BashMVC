@@ -1,0 +1,39 @@
+#!/bin/bash
+
+while true; do
+
+    coproc { nc -l 1200; }
+
+    exec <&${COPROC[0]}  # redirect netcat's output to stdin
+    exec >&${COPROC[1]}  # redirect stdout to netcat
+
+    # Here we are like in inetd. Browser sends data to stdin, 
+    # we send data back to stdout
+    read line; # METHOD PATH HTTP/VERSION
+    METHOD=${line%% *}
+    REQUEST_PATH=${line//$METHOD }
+    REQUEST_PATH=${REQUEST_PATH%% *}
+
+    THIS_CONTROLLER=${REQUEST_PATH#/}
+
+    if [ "`type -t controller[${THIS_CONTROLLER}]`" == "function" ]; then
+        RET=`controller[${THIS_CONTROLLER}]`
+    else
+        RET=`controller[]`;
+    fi
+
+    while read line; do
+        if [[ -z "$line" || $line == $'\r' ]]; then
+            break
+        fi
+    done
+
+cat <<EOF
+HTTP/1.0 200 OK
+Content-type: text/html; charset=utf-8
+Content-length: $((${#RET}+1))
+
+$RET
+EOF
+    sleep 0.1s;
+done
