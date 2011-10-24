@@ -1,8 +1,16 @@
 #!/bin/bash
 
+die_gracefully(){
+    [[ -n "$COPROC_PID" ]] && kill $COPROC_PID;
+    exit 0;
+}
+
+trap die_gracefully SIGINT SIGTERM
+
 while true; do
 
     coproc { nc -l 1200; }
+    export COPROC_PID
 
     exec <&${COPROC[0]}  # redirect netcat's output to stdin
     exec >&${COPROC[1]}  # redirect stdout to netcat
